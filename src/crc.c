@@ -13,7 +13,7 @@
  *  - ReflectOut    = True
  *  - Algorithm     = table-driven
  */
-#include "crc.h"     /* include the header file generated with pycrc */
+#include "../include/crc.h"     /* include the header file generated with pycrc */
 #include <stdlib.h>
 #include <stdint.h>
 

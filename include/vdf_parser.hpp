@@ -34,7 +34,6 @@
 #include <utility>
 #include <vector>
 
-#include <exception>
 #include <system_error>
 
 // for wstring support

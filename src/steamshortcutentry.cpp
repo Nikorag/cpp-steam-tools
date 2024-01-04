@@ -1,4 +1,4 @@
-#include "steamshortcutentry.h"
+#include "../include/steamshortcutentry.h"
 
 SteamShortcutEntry::SteamShortcutEntry() {
 }

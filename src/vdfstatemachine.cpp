@@ -1,4 +1,4 @@
-#include "vdfstatemachine.h"
+#include "../include/vdfstatemachine.h"
 
 #include <QVariant>
 #include <sstream>
