@@ -16,7 +16,7 @@ public:
 
     bool steamExists();
     QVector<SteamShortcutEntry> parseShortcuts();
-    SteamShortcutEntry buildShortcutEntry(QString appName, QString filepath, QMap<QString, const QPixmap*> artwork);
+    SteamShortcutEntry buildShortcutEntry(QString appName, QString filepath, QString launchOptions, QMap<QString, const QPixmap*> artwork);
     void updateShortcuts(QVector<SteamShortcutEntry> shortcuts);
     void updateControllerConfig(QString appname, QString controllerConfigID);
 

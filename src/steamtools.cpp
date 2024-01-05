@@ -259,7 +259,7 @@ void SteamTools::saveArtwork(QString shortAppId, QMap<QString, const QPixmap*> a
  * \param artwork Map of Artwork Type -> Pixmap
  * \return A SteamShortcutEntry crafted from these input parameters
  */
-SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filepath, QMap<QString, const QPixmap*> artwork) {
+SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filepath, QString launchOptions, QMap<QString, const QPixmap*> artwork) {
 
     SteamShortcutEntry entry;
     QString shortAppId = generateShortAppId("\"" + filepath + "\"", appName);
@@ -292,7 +292,7 @@ SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filep
     entry.setProperty("StartDir", directoryPath);
 
     entry.setProperty("ShortcutPath", "");
-    entry.setProperty("LaunchOptions", "");
+    entry.setProperty("LaunchOptions", launchOptions);
     entry.setProperty("IsHidden", "");
     entry.setProperty("AllowDesktopConfig", "");
     entry.setProperty("AllowOverlay", "");
