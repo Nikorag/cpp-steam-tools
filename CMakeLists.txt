@@ -18,7 +18,6 @@ add_library(cpp-steam-tools SHARED
   src/steamshortcutentry.cpp
   include/steamshortcutentry.h
   include/crc.h
-  src/crc.c
   include/vdf_parser.hpp
   include/vdfstatemachine.h
   src/vdfstatemachine.cpp

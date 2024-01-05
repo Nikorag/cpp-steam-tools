@@ -9,13 +9,13 @@ The `SteamTools` object must be instantiated with lamba functions for logging in
 ```c++
 //Create steam tools
 auto infoLambda = [this](const QString &infoMessage) {
-    std::cout << infoMessage << std::endl;
+    std::cout << infoMessage.toStdString() << std::endl;
 };
 
 auto errorLambda = [this](const QString &errorMessage) {
-    std::cerr << errorMessage << std::endl;
+    std::cerr << errorMessage.toStdString() << std::endl;
 };
-steamTools = new SteamTools(infoLambda, errorLambda);
+SteamTools* steam_tools = new SteamTools(infoLambda, errorLambda);
 ```
 The `SteamTools` object provides methods for:
 - Checking if Steam is installed
