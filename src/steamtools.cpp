@@ -7,6 +7,10 @@
 #include <sys/stat.h>
 #include <QDir>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "../include/crc.h"
 #include "../include/vdfstatemachine.h"
 #include "../include/vdf_parser.hpp"
@@ -267,7 +271,10 @@ SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filep
     QString shortAppId = generateShortAppId("\"" + filepath + "\"", appName);
     auto entryID = countStringOccurrencesInFile(errorFunction, shortcutFile, "appid");
     entryID++;
-
+    // Create artwork path if it doesn't exist
+    const QString artworkDirPath = "%1/userdata/%2/config/grid";
+    QDir artworkDir;
+    artworkDir.mkpath(artworkDirPath.arg(steamBaseDir).arg(mostRecentUser));
     //Handle Artwork
     QMap<QString, QString> artworkLocations = {
                                                {"icon", "%1/userdata/%2/config/grid/%3_icon.png"},
