@@ -4,12 +4,7 @@
 #include <qfileinfo.h>
 #include <qtextstream.h>
 #include <sstream>
-#include <sys/stat.h>
 #include <QDir>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 #include "../include/crc.h"
 #include "../include/vdfstatemachine.h"
@@ -36,6 +31,8 @@ QString SteamTools::getSteamBaseDir() {
 #if defined(__APPLE__)
     steamBaseDir.append(getenv("HOME"));
     steamBaseDir.append("/Library/Application Support/Steam");
+#elif defined(_WIN32)
+    steamBaseDir.append("C:/Program Files (x86)/Steam");
 #elif defined(__linux__)
     QString steamFlatpakDir = getenv("HOME");
     steamBaseDir.append(getenv("HOME"));
@@ -112,17 +109,7 @@ QString SteamTools::getShortcutFile() {
  * \return bool if we can find steam
  */
 bool SteamTools::steamExists() {
-    QString directoryPath = steamBaseDir;
-#ifdef _WIN32
-    DWORD attributes = GetFileAttributesA(directoryPath.toStdString().c_str());
-    return (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY));
-#elif __linux__ || __APPLE__
-    struct stat info;
-    return (stat(directoryPath.toStdString().c_str(), &info) == 0 && S_ISDIR(info.st_mode));
-#else
-        // Unsupported platform, you may need to add platform-specific code here
-    return false;
-#endif
+    return QDir(getSteamBaseDir()).exists();
 }
 
 /**
