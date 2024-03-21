@@ -114,7 +114,7 @@ QString SteamTools::getShortcutFile() {
 bool SteamTools::steamExists() {
     QString directoryPath = steamBaseDir;
 #ifdef _WIN32
-    DWORD attributes = GetFileAttributes(directoryPath.toStdString().c_str());
+    DWORD attributes = GetFileAttributesA(directoryPath.toStdString().c_str());
     return (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY));
 #elif __linux__ || __APPLE__
     struct stat info;
