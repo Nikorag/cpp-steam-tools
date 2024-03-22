@@ -4,7 +4,6 @@
 #include <QObject>
 
 class SteamShortcutEntry {
-
     private:
         QMap<QString, QString> properties;
 
