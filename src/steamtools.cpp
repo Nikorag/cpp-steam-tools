@@ -368,8 +368,15 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
     QString directoryPath = fileInfo.absolutePath();
 
     QString backupFile = directoryPath;
-    backupFile.append("shortcuts.vdf.bak");
-    QFile::copy(shortcutFile, backupFile);
+    backupFile.append("/shortcuts.vdf.bak");
+    QFile oldBackup(backupFile);
+    if(oldBackup.exists())
+        oldBackup.remove();
+    bool success = QFile::copy(shortcutFile, backupFile);
+    if(success)
+        infoFunction(QString("shortcuts.vdf backed up at '%1'").arg(backupFile));
+    else
+        errorFunction(QString("Error backing up shortcuts.vdf"));
 
     // Open the file for binary writing
     std::ofstream outFile(shortcutFile.toStdString(), std::ios::binary);
