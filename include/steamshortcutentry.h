@@ -27,6 +27,7 @@ class SteamShortcutEntry {
         QString getDevkitOverrideAppID();
         QString getLastPlayTime();
         QString getFlatpakAppID();
+        QString getTags();
 
 };
 

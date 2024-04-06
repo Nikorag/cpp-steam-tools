@@ -427,7 +427,8 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
                                    shortcut.getLastPlayTime());
             writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "FlatpakAppID",
                                    shortcut.getFlatpakAppID());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::LIST, "tags", "");
+            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::LIST, "tags",
+                                   shortcut.getTags());
             appId++;
         }
 

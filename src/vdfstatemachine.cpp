@@ -1,6 +1,7 @@
 #include "../include/vdfstatemachine.h"
 
 #include <QVariant>
+#include <QDebug>
 #include <sstream>
 
 namespace VDFStateMachine {
@@ -20,8 +21,8 @@ namespace VDFStateMachine {
                 //Update the state
                 state = ParseState::KEY;
                 if (value == 0x01) type = FieldType::STRING;
-                if (value == 0x02) type = FieldType::BOOLEAN;
-                if (value == 0x00) {
+                else if (value == 0x02) type = FieldType::BOOLEAN;
+                else if (value == 0x00) {
                     listValue.clear();
                     type = FieldType::LIST;
                 }
@@ -33,6 +34,8 @@ namespace VDFStateMachine {
         void handleState(uint8_t& value, ParseState& state, FieldType& type, std::ostringstream& utf8String, QString& key) {
             if (value != 0x00) {
                 utf8String << static_cast<char>(value);
+                if(QString::fromStdString(utf8String.str()).contains("\u0001"))
+                    utf8String.str("");
             } else {
                 //Set key and reset string
                 key = QString::fromStdString(utf8String.str());
@@ -54,7 +57,8 @@ namespace VDFStateMachine {
                     if (value != 0x00) {
                         utf8String << static_cast<char>(value);
                     } else {
-                        entry.setProperty(key.toStdString().c_str(), QString::fromStdString(utf8String.str()));
+                        qDebug() << key << QString::fromStdString(utf8String.str());
+                        entry.setProperty(key, QString::fromStdString(utf8String.str()));
                         utf8String.str("");
 
                         //Update the state

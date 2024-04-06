@@ -11,10 +11,16 @@ QString SteamShortcutEntry::getAppid() {
     return properties.value("appid");
 }
 QString SteamShortcutEntry::getAppName() {
-    return properties.value("AppName");
+    if(properties.contains("AppName"))
+        return properties.value("AppName");
+    else
+        return properties.value("appname");
 }
 QString SteamShortcutEntry::getExe() {
-    return properties.value("Exe");
+    if(properties.contains("Exe"))
+        return properties.value("Exe");
+    else
+        return properties.value("exe");
 }
 QString SteamShortcutEntry::getStartDir() {
     return properties.value("StartDir");
@@ -54,4 +60,7 @@ QString SteamShortcutEntry::getLastPlayTime() {
 }
 QString SteamShortcutEntry::getFlatpakAppID() {
     return properties.value("FlatpakAppID");
+}
+QString SteamShortcutEntry::getTags() {
+    return properties.value("tags");
 }
