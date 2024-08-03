@@ -368,7 +368,8 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
     QString directoryPath = fileInfo.absolutePath();
 
     QString backupFile = directoryPath;
-    backupFile.append("/shortcuts.vdf.bak");
+    QString dateString = QDateTime::currentDateTime().toString("yyyy-MM-dd-HH:mm:ss");
+    backupFile.append(QString("/shortcuts.vdf.%1.bak").arg(dateString));
     QFile oldBackup(backupFile);
     if(oldBackup.exists())
         oldBackup.remove();
