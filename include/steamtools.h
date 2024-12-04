@@ -7,9 +7,8 @@
 #include <QObject>
 #include <QPixmap>
 
-class CPPSTEAMTOOLS_EXPORT SteamTools : public QObject
+class SteamTools
 {
-    Q_OBJECT
 
 public:
     SteamTools(const std::function<void(const QString&)>& infoFunction, const std::function<void(const QString&)>& errorFunction);

@@ -4,7 +4,6 @@
 #include <qfileinfo.h>
 #include <qtextstream.h>
 #include <sstream>
-#include <sys/stat.h>
 #include <QDir>
 
 #include "../include/crc.h"
@@ -32,6 +31,8 @@ QString SteamTools::getSteamBaseDir() {
 #if defined(__APPLE__)
     steamBaseDir.append(getenv("HOME"));
     steamBaseDir.append("/Library/Application Support/Steam");
+#elif defined(_WIN32)
+    steamBaseDir.append("C:/Program Files (x86)/Steam");
 #elif defined(__linux__)
     QString steamFlatpakDir = getenv("HOME");
     steamBaseDir.append(getenv("HOME"));
@@ -108,17 +109,7 @@ QString SteamTools::getShortcutFile() {
  * \return bool if we can find steam
  */
 bool SteamTools::steamExists() {
-    QString directoryPath = steamBaseDir;
-#ifdef _WIN32
-    DWORD attributes = GetFileAttributes(directoryPath.toStdString().c_str());
-    return (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY));
-#elif __linux__ || __APPLE__
-    struct stat info;
-    return (stat(directoryPath.toStdString().c_str(), &info) == 0 && S_ISDIR(info.st_mode));
-#else
-        // Unsupported platform, you may need to add platform-specific code here
-    return false;
-#endif
+    return QDir(getSteamBaseDir()).exists();
 }
 
 /**
@@ -267,7 +258,10 @@ SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filep
     QString shortAppId = generateShortAppId("\"" + filepath + "\"", appName);
     auto entryID = countStringOccurrencesInFile(errorFunction, shortcutFile, "appid");
     entryID++;
-
+    // Create artwork path if it doesn't exist
+    const QString artworkDirPath = "%1/userdata/%2/config/grid";
+    QDir artworkDir;
+    artworkDir.mkpath(artworkDirPath.arg(steamBaseDir).arg(mostRecentUser));
     //Handle Artwork
     QMap<QString, QString> artworkLocations = {
                                                {"icon", "%1/userdata/%2/config/grid/%3_icon.png"},
@@ -374,8 +368,15 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
     QString directoryPath = fileInfo.absolutePath();
 
     QString backupFile = directoryPath;
-    backupFile.append("shortcuts.vdf.bak");
-    QFile::copy(shortcutFile, backupFile);
+    backupFile.append("/shortcuts.vdf.bak");
+    QFile oldBackup(backupFile);
+    if(oldBackup.exists())
+        oldBackup.remove();
+    bool success = QFile::copy(shortcutFile, backupFile);
+    if(success)
+        infoFunction(QString("shortcuts.vdf backed up at '%1'").arg(backupFile));
+    else
+        errorFunction(QString("Error backing up shortcuts.vdf"));
 
     // Open the file for binary writing
     std::ofstream outFile(shortcutFile.toStdString(), std::ios::binary);
