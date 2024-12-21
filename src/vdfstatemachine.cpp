@@ -1,7 +1,6 @@
 #include "../include/vdfstatemachine.h"
 
 #include <QVariant>
-#include <QDebug>
 #include <sstream>
 
 namespace VDFStateMachine {
@@ -37,13 +36,13 @@ namespace VDFStateMachine {
                 if(QString::fromStdString(utf8String.str()).contains("\u0001"))
                     utf8String.str("");
             } else {
-                //Set key and reset string
-                key = QString::fromStdString(utf8String.str());
+                //Set key to lowercase version so case doesn't matter and reset string
+                key = QString::fromStdString(utf8String.str()).toLower();
                 utf8String.str("");
 
                 //Update the state
                 state = ParseState::VALUE;
-                if (key == "LastPlayTime") type = FieldType::DATE;
+                if (key == "lastplaytime") type = FieldType::DATE;
             }
         }
     }
@@ -57,7 +56,6 @@ namespace VDFStateMachine {
                     if (value != 0x00) {
                         utf8String << static_cast<char>(value);
                     } else {
-                        qDebug() << key << QString::fromStdString(utf8String.str());
                         entry.setProperty(key, QString::fromStdString(utf8String.str()));
                         utf8String.str("");
 

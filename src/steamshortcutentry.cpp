@@ -11,55 +11,49 @@ QString SteamShortcutEntry::getAppid() {
     return properties.value("appid");
 }
 QString SteamShortcutEntry::getAppName() {
-    if(properties.contains("AppName"))
-        return properties.value("AppName");
-    else
-        return properties.value("appname");
+    return properties.value("appname");
 }
 QString SteamShortcutEntry::getExe() {
-    if(properties.contains("Exe"))
-        return properties.value("Exe");
-    else
-        return properties.value("exe");
+    return properties.value("exe");
 }
 QString SteamShortcutEntry::getStartDir() {
-    return properties.value("StartDir");
+    return properties.value("startdir");
 }
 QString SteamShortcutEntry::geticon() {
     return properties.value("icon");
 }
 QString SteamShortcutEntry::getShortcutPath() {
-    return properties.value("ShortcutPath");
+    return properties.value("shortcutpath");
 }
 QString SteamShortcutEntry::getLaunchOptions() {
-    return properties.value("LaunchOptions");
+    return properties.value("launchoptions");
 }
 QString SteamShortcutEntry::getIsHidden() {
-    return properties.value("IsHidden");
+    return properties.value("ishidden");
 }
 QString SteamShortcutEntry::getAllowDesktopConfig() {
-    return properties.value("AllowDesktopConfig");
+    return properties.value("allowdesktopconfig");
 }
 QString SteamShortcutEntry::getAllowOverlay() {
-    return properties.value("AllowOverlay");
+    return properties.value("allowoverlay");
 }
 QString SteamShortcutEntry::getOpenVR() {
-    return properties.value("OpenVR");
+    return properties.value("openvr");
 }
 QString SteamShortcutEntry::getDevkit() {
-    return properties.value("Devkit");
+    return properties.value("devkit");
 }
 QString SteamShortcutEntry::getDevkitGameID() {
-    return properties.value("DevkitGameID");
+    return properties.value("devkitgameid");
 }
 QString SteamShortcutEntry::getDevkitOverrideAppID() {
-    return properties.value("DevkitOverrideAppID");
+    return properties.value("devkitoverrideappid");
 }
 QString SteamShortcutEntry::getLastPlayTime() {
-    return properties.value("LastPlayTime");
+    return properties.value("lastplaytime");
 }
 QString SteamShortcutEntry::getFlatpakAppID() {
-    return properties.value("FlatpakAppID");
+    return properties.value("flatpakappid");
 }
 QString SteamShortcutEntry::getTags() {
     return properties.value("tags");

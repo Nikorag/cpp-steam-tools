@@ -281,23 +281,23 @@ SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filep
     }
 
     entry.setProperty("appid", QString::number(entryID));
-    entry.setProperty("AppName", appName);
-    entry.setProperty("Exe", "\"" + filepath + "\"");
+    entry.setProperty("appname", appName);
+    entry.setProperty("exe", "\"" + filepath + "\"");
     QFileInfo fileInfo(filepath);
     QString directoryPath = fileInfo.absolutePath();
-    entry.setProperty("StartDir", directoryPath);
+    entry.setProperty("startdir", directoryPath);
 
-    entry.setProperty("ShortcutPath", "");
-    entry.setProperty("LaunchOptions", launchOptions);
-    entry.setProperty("IsHidden", "");
-    entry.setProperty("AllowDesktopConfig", "");
-    entry.setProperty("AllowOverlay", "");
-    entry.setProperty("OpenVR", "");
-    entry.setProperty("Devkit", "");
-    entry.setProperty("DevkitGameID", "");
-    entry.setProperty("DevkitOverrideAppID", "");
-    entry.setProperty("LastPlayTime", "+ne");
-    entry.setProperty("FlatpakAppID", "");
+    entry.setProperty("shortcutpath", "");
+    entry.setProperty("launchoptions", launchOptions);
+    entry.setProperty("ishidden", "");
+    entry.setProperty("allowdesktopconfig", "");
+    entry.setProperty("allowoverlay", "");
+    entry.setProperty("openvr", "");
+    entry.setProperty("devkit", "");
+    entry.setProperty("devkitgameid", "");
+    entry.setProperty("devkitoverrideappid", "");
+    entry.setProperty("lastplaytime", "+ne");
+    entry.setProperty("flatpakappid", "");
 
     return entry;
 }
@@ -468,7 +468,7 @@ void SteamTools::updateControllerConfig(QString appName, QString controllerConfi
     auto existingRecord = root.childs.find(appName.toStdString());
 
     if (existingRecord == root.childs.end()) {
-        infoFunction(QString("No controller config found for %s so adding in chiaki4deck workshop id %1").arg(appName));
+        infoFunction(QString("Setting %1 to use the official controller config with workshop ID %2 for the Steam Deck controller").arg(appName).arg(controllerConfigID));
         tyti::vdf::basic_object<std::ifstream::char_type> controllerEntry;
         controllerEntry.set_name(appName.toStdString());
         controllerEntry.add_attribute("workshop", controllerConfigID.toStdString());
