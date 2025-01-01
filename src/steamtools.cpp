@@ -466,6 +466,7 @@ void SteamTools::updateControllerConfig(QString appName, QString controllerConfi
     std::ifstream file(controllerFile.toStdString());
     auto root = tyti::vdf::read(file);
     auto existingRecord = root.childs.find(appName.toStdString());
+    bool update_file = false;
 
     if (existingRecord == root.childs.end()) {
         infoFunction(QString("Setting %1 to use the official controller config with workshop ID %2 for the Steam Deck controller").arg(appName).arg(controllerConfigID));
@@ -476,12 +477,53 @@ void SteamTools::updateControllerConfig(QString appName, QString controllerConfi
         std::unique_ptr<tyti::vdf::basic_object<std::ifstream::char_type>> uniqueObjectPtr(new tyti::vdf::basic_object<char>(controllerEntry));
 
         root.add_child(std::move(uniqueObjectPtr));
-        std::ofstream outFile(controllerFile.toStdString());
-        QString backupFile = QString("%1.bak").arg(controllerFile);
-        QFile::copy(controllerFile, backupFile);
-        tyti::vdf::write(outFile, root);
+        update_file = true;
     } else {
-        infoFunction(QString("Controller config already set for %1, not overwriting").arg(appName));
+        auto oldEntry = root.childs[appName.toStdString()];
+        // look for workshop entry
+        auto existingWorkshop = oldEntry->attribs.find("workshop");
+        if(existingWorkshop == oldEntry->attribs.end())
+        {
+            // add if doesn't exist
+            oldEntry->add_attribute("workshop", controllerConfigID.toStdString());
+            update_file = true;
+        }
+        // delete template setting if it exists so use workshop id
+        existingWorkshop = oldEntry->attribs.find("template");
+        if(existingWorkshop != oldEntry->attribs.end())
+        {
+            // delete if exists
+            oldEntry->attribs.erase(existingWorkshop);
+            update_file = true;
+        }
+        else
+        {
+            if(oldEntry->attribs["workshop"] == controllerConfigID.toStdString())
+                infoFunction(QString("Controller config already set for %1, not overwriting").arg(appName));
+            else
+            {
+                oldEntry->attribs["workshop"] = controllerConfigID.toStdString();
+                root.childs[appName.toStdString()] = oldEntry;
+                update_file = true;
+            }
+        }
+    }
+    if(update_file)
+    {
+        QString directoryPath = controllerFileInfo.absolutePath();
+        QString backupFile = directoryPath;
+        QString dateString = QDateTime::currentDateTime().toString("yyyy-MM-dd-HH:mm:ss");
+        backupFile.append(QString("/configset_controller_neptune.%2.bak").arg(dateString));
+        QFile oldBackup(backupFile);
+        if(oldBackup.exists())
+            oldBackup.remove();
+        bool success = QFile::copy(controllerFile, backupFile);
+        if(success)
+            infoFunction(QString("%1 backed up at %2").arg(controllerFile).arg(backupFile));
+        else
+            errorFunction(QString("Error backing up %1").arg(controllerFile));
+        std::ofstream outFile(controllerFile.toStdString());
+        tyti::vdf::write(outFile, root);
     }
 }
 
