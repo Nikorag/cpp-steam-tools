@@ -438,7 +438,7 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
 
         // Close the file
         outFile.close();
-        infoFunction(QString("File '%1' created successfully.").arg(shortcutFile));
+        infoFunction(QString("File '%1' updated successfully.").arg(shortcutFile));
     } else {
         errorFunction(QString("Error opening file '%1' for writing.").arg(shortcutFile));
     }
