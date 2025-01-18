@@ -165,7 +165,7 @@ QVector<SteamShortcutEntry> SteamTools::parseShortcuts() {
 
         buffer.erase(buffer.begin(), buffer.begin() + 11);
 
-        VDFStateMachine::ParseState state = VDFStateMachine::ParseState::APPID;
+        VDFStateMachine::ParseState state = VDFStateMachine::ParseState::ENTRYID;
         VDFStateMachine::ListParseState listState = VDFStateMachine::ListParseState::WAITING;
         VDFStateMachine::FieldType type;
         std::ostringstream utf8String;
@@ -173,14 +173,15 @@ QVector<SteamShortcutEntry> SteamTools::parseShortcuts() {
         SteamShortcutEntry entry;
         std::vector<char> endingBuffer;
         QStringList listValue;
+        QByteArray bytes;
 
         for (char byte: buffer) {
             // Convert the byte to an unsigned integer (uint8)
             uint8_t value = static_cast<uint8_t>(byte);
 
             switch (state) {
-            case VDFStateMachine::ParseState::APPID:
-                VDFStateMachine::APPID::handleState(value, state, type);
+            case VDFStateMachine::ParseState::ENTRYID:
+                VDFStateMachine::ENTRYID::handleState(value, state, type);
                 break;
             case VDFStateMachine::ParseState::WAITING:
                 VDFStateMachine::WAITING::handleState(value, state, type, listValue);
@@ -190,7 +191,7 @@ QVector<SteamShortcutEntry> SteamTools::parseShortcuts() {
                 break;
             case VDFStateMachine::ParseState::VALUE:
                 VDFStateMachine::VALUE::handleState(value, state, type, utf8String, key, entry, listState,
-                                                    listValue, endingBuffer, shortcuts);
+                                                    listValue, bytes, endingBuffer, shortcuts);
                 break;
             case VDFStateMachine::ParseState::ENDING:
                 VDFStateMachine::ENDING::handleState(value, state, type, endingBuffer);
@@ -279,10 +280,11 @@ SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filep
                                .arg(shortAppId);
         entry.setProperty("icon", iconPath);
     }
-
-    entry.setProperty("appid", QString::number(entryID));
+    QString exe = "\"" + filepath + "\"";
+    entry.setProperty("appid", QString::number(generateShortcutId(exe, appName)));
+    entry.setProperty("entryid", QString::number(entryID));
     entry.setProperty("appname", appName);
-    entry.setProperty("exe", "\"" + filepath + "\"");
+    entry.setProperty("exe", exe);
     QFileInfo fileInfo(filepath);
     QString directoryPath = fileInfo.absolutePath();
     entry.setProperty("startdir", directoryPath);
@@ -338,6 +340,9 @@ void writeShortcutAttribute(std::ofstream& outFile, VDFStateMachine::FieldType t
     } else if (type == VDFStateMachine::FieldType::DATE) {
         // Date encoding (0x00 0x00 0x00 0x00)
         outFile.put(0x00).put(0x00).put(0x00).put(0x00);
+    } else if (type == VDFStateMachine::FieldType::APPID) {
+        uint32_t id = value.toUInt();
+        outFile.write(reinterpret_cast<const char *>(&id), sizeof(id));
     } else if (type == VDFStateMachine::FieldType::LIST) {
         QStringList list = value.split(",");
         int index = 0;
@@ -390,19 +395,13 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
         outFile << "shortcuts";
         outFile.put(0x00);
 
-        int appId = 0;
+        int entryId = 0;
         for (SteamShortcutEntry shortcut: shortcuts) {
             outFile.put(0x00);
-            outFile << std::to_string(appId);
-            outFile.put(0x00).put(0x02);
-            outFile << "appid";
+            outFile << std::to_string(entryId);
             outFile.put(0x00);
-
-            QString exe = shortcut.getExe();
-            QString appName = shortcut.getAppName();
-            uint32_t shortcutId = generateShortcutId(exe, appName);
-            outFile.write(reinterpret_cast<const char *>(&shortcutId), sizeof(shortcutId));
-
+            uint32_t shortcutId = shortcut.getAppid().toUInt();
+            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::APPID, "appid", shortcut.getAppid());
             writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "AppName", shortcut.getAppName());
             writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "Exe", shortcut.getExe());
             writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "StartDir",
@@ -430,7 +429,7 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
                                    shortcut.getFlatpakAppID());
             writeShortcutAttribute(outFile, VDFStateMachine::FieldType::LIST, "tags",
                                    shortcut.getTags());
-            appId++;
+            entryId++;
         }
 
         outFile.put(0x08).put(0x08);

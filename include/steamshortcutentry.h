@@ -10,7 +10,7 @@ class SteamShortcutEntry {
     public:
         explicit SteamShortcutEntry();
         void setProperty(QString key, QString value);
-
+        QString getEntryid();
         QString getAppid();
         QString getAppName();
         QString getExe();

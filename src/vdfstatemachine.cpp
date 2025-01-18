@@ -5,11 +5,11 @@
 
 namespace VDFStateMachine {
 
-    namespace APPID {
+    namespace ENTRYID {
         void handleState(uint8_t& value, ParseState& state, FieldType& type) {
-            if (value == 0x01) {
+            if (value == 0x02) {
                 state = ParseState::KEY;
-                if (value == 0x01) type = FieldType::STRING;
+                type = FieldType::APPID;
             }
         }
     };
@@ -42,7 +42,8 @@ namespace VDFStateMachine {
 
                 //Update the state
                 state = ParseState::VALUE;
-                if (key == "lastplaytime") type = FieldType::DATE;
+                if (key == "lastplaytime")
+                    type = FieldType::DATE;
             }
         }
     }
@@ -50,8 +51,8 @@ namespace VDFStateMachine {
     namespace VALUE {
         void handleState(uint8_t& value, ParseState& state, FieldType& type, std::ostringstream& utf8String,
             QString& key, SteamShortcutEntry& entry, ListParseState& listState, QStringList& listValue,
-            std::vector<char>& endingBuffer, QVector<SteamShortcutEntry>& shortcuts) {
-                  switch(type) {
+            QByteArray& bytes, std::vector<char>& endingBuffer, QVector<SteamShortcutEntry>& shortcuts) {
+                switch(type) {
                 case FieldType::STRING:
                     if (value != 0x00) {
                         utf8String << static_cast<char>(value);
@@ -76,6 +77,17 @@ namespace VDFStateMachine {
                     //Update the state
                     state = ParseState::ENDING;
                     break;
+                case FieldType::APPID:
+                    if(bytes.size() < 4)
+                        bytes.append(value);
+                    if(bytes.size() >= 4)
+                    {
+                        entry.setProperty(key, QString::number(*reinterpret_cast<const uint32_t *>(bytes.constData())));
+                        bytes.clear();
+                            //Update the state
+                        state = ParseState::WAITING;
+                    }
+                    break;
                 case FieldType::LIST:
                     if (listState == ListParseState::WAITING && value == 0x08 && endingBuffer.size() < 1) {
                         endingBuffer.emplace_back(value);
@@ -85,7 +97,7 @@ namespace VDFStateMachine {
                         //Update states
                         // Bit of a hack here but we know that tags is the only list and it's last off the block so we handle that here
                         listState = ListParseState::WAITING;
-                        state = ParseState::APPID;
+                        state = ParseState::ENTRYID;
                         //Add this entry and make a new one
                         shortcuts.append(entry);
                         entry = SteamShortcutEntry();

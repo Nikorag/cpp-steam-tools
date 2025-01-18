@@ -7,6 +7,10 @@ void SteamShortcutEntry::setProperty(QString key, QString value) {
     properties.insert(key, value);
 }
 
+QString SteamShortcutEntry::getEntryid() {
+    return properties.value("entryid");
+}
+
 QString SteamShortcutEntry::getAppid() {
     return properties.value("appid");
 }
