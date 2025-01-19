@@ -9,14 +9,6 @@
 
 namespace VDFStateMachine {
 
-    enum class FieldType {
-        STRING,
-        BOOLEAN,
-        LIST,
-        DATE,
-        APPID
-    };
-
     enum class ParseState {
         ENTRYID,
         WAITING,
@@ -42,7 +34,7 @@ namespace VDFStateMachine {
 
     namespace KEY {
         void handleState(uint8_t& value, ParseState& state, FieldType& type, std::ostringstream& utf8String, QString& key);
-    }
+    };
 
     namespace VALUE {
         std::string delimit(const std::vector<std::string>& vec, char delimiter);
@@ -50,11 +42,11 @@ namespace VDFStateMachine {
         void handleState(uint8_t& value, ParseState& state, FieldType& type, std::ostringstream& utf8String,
             QString& key, SteamShortcutEntry& entry, ListParseState& listState, QStringList& listValue,
             QByteArray& bytes, std::vector<char>& endingBuffer, QVector<SteamShortcutEntry>& shortcuts);
-    }
+    };
 
     namespace ENDING {
         void handleState(uint8_t& value, ParseState& state, FieldType& type, std::vector<char>& endingBuffer);
     };
-}
+};
 
 #endif // VDFSTATEMACHINE_H

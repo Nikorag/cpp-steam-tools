@@ -3,14 +3,28 @@
 #include <QMap>
 #include <QObject>
 
+enum class FieldType {
+    STRING,
+    BOOLEAN,
+    LIST,
+    DATE,
+    APPID
+};
+typedef struct steam_shortcut_property_t {
+    QString value;
+    FieldType type;
+} steam_shortcut_property;
 class SteamShortcutEntry {
+
     private:
-        QMap<QString, QString> properties;
+        QMap<QString, steam_shortcut_property> properties;
+        QMap<QString, QString> keys;
 
     public:
         explicit SteamShortcutEntry();
-        void setProperty(QString key, QString value);
-        QString getEntryid();
+        void setProperty(QString key, QString real_key, steam_shortcut_property property);
+        QMap<QString, steam_shortcut_property> getProperties();
+        QMap<QString, QString> getKeys();
         QString getAppid();
         QString getAppName();
         QString getExe();
