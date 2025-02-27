@@ -7,8 +7,8 @@
 #include <QDir>
 
 #include "../include/crc.h"
-#include "../include/vdfstatemachine.h"
 #include "../include/vdf_parser.hpp"
+#include "../include/vdfstatemachine.h"
 
 //Header of the shortcut file, used to check validity
 std::vector<char> fileHeader = { 0x00, 0x73, 0x68, 0x6F, 0x72, 0x74, 0x63, 0x75, 0x74, 0x73, 0x00 };
@@ -165,22 +165,23 @@ QVector<SteamShortcutEntry> SteamTools::parseShortcuts() {
 
         buffer.erase(buffer.begin(), buffer.begin() + 11);
 
-        VDFStateMachine::ParseState state = VDFStateMachine::ParseState::APPID;
+        VDFStateMachine::ParseState state = VDFStateMachine::ParseState::ENTRYID;
         VDFStateMachine::ListParseState listState = VDFStateMachine::ListParseState::WAITING;
-        VDFStateMachine::FieldType type;
+        FieldType type;
         std::ostringstream utf8String;
         QString key;
         SteamShortcutEntry entry;
         std::vector<char> endingBuffer;
         QStringList listValue;
+        QByteArray bytes;
 
         for (char byte: buffer) {
             // Convert the byte to an unsigned integer (uint8)
             uint8_t value = static_cast<uint8_t>(byte);
 
             switch (state) {
-            case VDFStateMachine::ParseState::APPID:
-                VDFStateMachine::APPID::handleState(value, state, type);
+            case VDFStateMachine::ParseState::ENTRYID:
+                VDFStateMachine::ENTRYID::handleState(value, state, type);
                 break;
             case VDFStateMachine::ParseState::WAITING:
                 VDFStateMachine::WAITING::handleState(value, state, type, listValue);
@@ -190,7 +191,7 @@ QVector<SteamShortcutEntry> SteamTools::parseShortcuts() {
                 break;
             case VDFStateMachine::ParseState::VALUE:
                 VDFStateMachine::VALUE::handleState(value, state, type, utf8String, key, entry, listState,
-                                                    listValue, endingBuffer, shortcuts);
+                                                    listValue, bytes, endingBuffer, shortcuts);
                 break;
             case VDFStateMachine::ParseState::ENDING:
                 VDFStateMachine::ENDING::handleState(value, state, type, endingBuffer);
@@ -277,28 +278,66 @@ SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filep
                                .arg(steamBaseDir)
                                .arg(mostRecentUser)
                                .arg(shortAppId);
-        entry.setProperty("icon", iconPath);
+        steam_shortcut_property new_property;
+        new_property.type = FieldType::STRING;
+        new_property.value = iconPath;
+        entry.setProperty("icon", "icon", new_property);
     }
-
-    entry.setProperty("appid", QString::number(entryID));
-    entry.setProperty("AppName", appName);
-    entry.setProperty("Exe", "\"" + filepath + "\"");
+    QString exe = "\"" + filepath + "\"";
+    steam_shortcut_property new_property;
+    new_property.type = FieldType::APPID;
+    new_property.value = QString::number(generateShortcutId(exe, appName));
+    entry.setProperty("appid", "appid", new_property);
+    new_property.type =  FieldType::STRING;
+    new_property.value = appName;
+    entry.setProperty("appname", "AppName", new_property);
+    new_property.type = FieldType::STRING;
+    new_property.value = exe;
+    entry.setProperty("exe", "Exe", new_property);
     QFileInfo fileInfo(filepath);
     QString directoryPath = fileInfo.absolutePath();
-    entry.setProperty("StartDir", directoryPath);
-
-    entry.setProperty("ShortcutPath", "");
-    entry.setProperty("LaunchOptions", launchOptions);
-    entry.setProperty("IsHidden", "");
-    entry.setProperty("AllowDesktopConfig", "");
-    entry.setProperty("AllowOverlay", "");
-    entry.setProperty("OpenVR", "");
-    entry.setProperty("Devkit", "");
-    entry.setProperty("DevkitGameID", "");
-    entry.setProperty("DevkitOverrideAppID", "");
-    entry.setProperty("LastPlayTime", "+ne");
-    entry.setProperty("FlatpakAppID", "");
-
+    new_property.type = FieldType::STRING;
+    new_property.value = directoryPath;
+    entry.setProperty("startdir", "StartDir", new_property);
+    new_property.type = FieldType::STRING;
+    new_property.value = "";
+    entry.setProperty("shortcutpath", "ShortcutPath", new_property);
+    new_property.type = FieldType::STRING;
+    new_property.value = launchOptions;
+    entry.setProperty("launchoptions", "LaunchOptions", new_property);
+    new_property.type = FieldType::BOOLEAN;
+    new_property.value = "";
+    entry.setProperty("ishidden", "IsHidden", new_property);
+    new_property.type = FieldType::BOOLEAN;
+    new_property.value = "";
+    entry.setProperty("allowdesktopconfig", "AllowDesktopConfig", new_property);
+    new_property.type = FieldType::BOOLEAN;
+    new_property.value = "";
+    entry.setProperty("allowoverlay", "AllowOverlay", new_property);
+    new_property.type = FieldType::BOOLEAN;
+    new_property.value = "";
+    entry.setProperty("openvr", "OpenVR", new_property);
+    new_property.type = FieldType::BOOLEAN;
+    new_property.value = "";
+    entry.setProperty("devkit", "DevKit", new_property);
+    new_property.type = FieldType::STRING;
+    new_property.value = "";
+    entry.setProperty("devkitgameid", "DevkitGameID", new_property);
+    new_property.type = FieldType::BOOLEAN;
+    new_property.value = "";
+    entry.setProperty("devkitoverrideappid", "DevkitOverrideAppID", new_property);
+    new_property.type = FieldType::DATE;
+    new_property.value = "";
+    entry.setProperty("lastplaytime", "LastPlayTime", new_property);
+    new_property.type = FieldType::STRING;
+    new_property.value = "";
+    entry.setProperty("flatpakappid", "FlatpakAppID", new_property);
+    new_property.type = FieldType::LIST;
+    QList<QString> listValue;
+    listValue.append("PlayStation");
+    listValue.append("Remote Play");
+    new_property.value = listValue.join(',');
+    entry.setProperty("tags", "tags", new_property);
     return entry;
 }
 
@@ -309,11 +348,11 @@ SteamShortcutEntry SteamTools::buildShortcutEntry(QString appName, QString filep
  * \param key The name of the Attribute
  * \param value The value of the Attribute
  */
-void writeShortcutAttribute(std::ofstream& outFile, VDFStateMachine::FieldType type, QString key, QString value) {
+void writeShortcutAttribute(std::ofstream& outFile, FieldType type, QString key, QString value) {
     // Write the identifying bit
-    if (type == VDFStateMachine::FieldType::LIST) {
+    if (type == FieldType::LIST) {
         outFile.put(0x00);
-    } else if (type == VDFStateMachine::FieldType::STRING) {
+    } else if (type == FieldType::STRING) {
         outFile.put(0x01);
     } else {
         outFile.put(0x02);
@@ -326,19 +365,22 @@ void writeShortcutAttribute(std::ofstream& outFile, VDFStateMachine::FieldType t
     outFile.put(0x00);
 
     // Write the value based on the type
-    if (type == VDFStateMachine::FieldType::STRING) {
+    if (type == FieldType::STRING) {
         outFile << value.toStdString();
         // Ending sequence for string
         outFile.put(0x00);
-    } else if (type == VDFStateMachine::FieldType::BOOLEAN) {
+    } else if (type == FieldType::BOOLEAN) {
         // Boolean value encoding (0x01 for true, 0x00 for false)
         outFile.put(value == "true" ? 0x01 : 0x00);
         // Ending sequence for boolean
         outFile.put(0x00).put(0x00).put(0x00);
-    } else if (type == VDFStateMachine::FieldType::DATE) {
+    } else if (type == FieldType::DATE) {
         // Date encoding (0x00 0x00 0x00 0x00)
         outFile.put(0x00).put(0x00).put(0x00).put(0x00);
-    } else if (type == VDFStateMachine::FieldType::LIST) {
+    } else if (type == FieldType::APPID) {
+        uint32_t id = value.toUInt();
+        outFile.write(reinterpret_cast<const char *>(&id), sizeof(id));
+    } else if (type == FieldType::LIST) {
         QStringList list = value.split(",");
         int index = 0;
         for (const auto& element: list) {
@@ -368,7 +410,8 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
     QString directoryPath = fileInfo.absolutePath();
 
     QString backupFile = directoryPath;
-    backupFile.append("/shortcuts.vdf.bak");
+    QString dateString = QDateTime::currentDateTime().toString("yyyy-MM-dd-HH:mm:ss");
+    backupFile.append(QString("/shortcuts.vdf.%1.bak").arg(dateString));
     QFile oldBackup(backupFile);
     if(oldBackup.exists())
         oldBackup.remove();
@@ -389,54 +432,26 @@ void SteamTools::updateShortcuts(QVector<SteamShortcutEntry> shortcuts) {
         outFile << "shortcuts";
         outFile.put(0x00);
 
-        int appId = 0;
+        int entryId = 0;
         for (SteamShortcutEntry shortcut: shortcuts) {
             outFile.put(0x00);
-            outFile << std::to_string(appId);
-            outFile.put(0x00).put(0x02);
-            outFile << "appid";
+            outFile << std::to_string(entryId);
             outFile.put(0x00);
-
-            QString exe = shortcut.getExe();
-            QString appName = shortcut.getAppName();
-            uint32_t shortcutId = generateShortcutId(exe, appName);
-            outFile.write(reinterpret_cast<const char *>(&shortcutId), sizeof(shortcutId));
-
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "AppName", shortcut.getAppName());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "Exe", shortcut.getExe());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "StartDir",
-                                   shortcut.getStartDir());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "icon", shortcut.geticon());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "ShortcutPath",
-                                   shortcut.getShortcutPath());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "LaunchOptions",
-                                   shortcut.getLaunchOptions());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::BOOLEAN, "IsHidden",
-                                   shortcut.getIsHidden());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::BOOLEAN, "AllowDesktopConfig",
-                                   shortcut.getAllowDesktopConfig());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::BOOLEAN, "AllowOverlay",
-                                   shortcut.getAllowOverlay());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::BOOLEAN, "OpenVR", shortcut.getOpenVR());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::BOOLEAN, "Devkit", shortcut.getDevkit());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "DevkitGameID",
-                                   shortcut.getDevkitGameID());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::BOOLEAN, "DevkitOverrideAppID",
-                                   shortcut.getDevkitOverrideAppID());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::DATE, "LastPlayTime",
-                                   shortcut.getLastPlayTime());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::STRING, "FlatpakAppID",
-                                   shortcut.getFlatpakAppID());
-            writeShortcutAttribute(outFile, VDFStateMachine::FieldType::LIST, "tags", "");
-            appId++;
+            uint32_t shortcutId = shortcut.getAppid().toUInt();
+            const auto &keys = shortcut.getKeys();
+            QMapIterator<QString, steam_shortcut_property> iter(shortcut.getProperties());
+            while (iter.hasNext()) {
+                iter.next();
+                writeShortcutAttribute(outFile, iter.value().type, keys.value(iter.key()), iter.value().value);
+            }
+            entryId++;
         }
-
         outFile.put(0x08).put(0x08);
         outFile.write(reinterpret_cast<char *>(byteData.data()), byteData.size());
 
         // Close the file
         outFile.close();
-        infoFunction(QString("File '%1' created successfully.").arg(shortcutFile));
+        infoFunction(QString("File '%1' updated successfully.").arg(shortcutFile));
     } else {
         errorFunction(QString("Error opening file '%1' for writing.").arg(shortcutFile));
     }
@@ -464,9 +479,10 @@ void SteamTools::updateControllerConfig(QString appName, QString controllerConfi
     std::ifstream file(controllerFile.toStdString());
     auto root = tyti::vdf::read(file);
     auto existingRecord = root.childs.find(appName.toStdString());
+    bool update_file = false;
 
     if (existingRecord == root.childs.end()) {
-        infoFunction(QString("No controller config found for %s so adding in chiaki4deck workshop id %1").arg(appName));
+        infoFunction(QString("Setting %1 to use the official controller config with workshop ID %2 for the Steam Deck controller").arg(appName).arg(controllerConfigID));
         tyti::vdf::basic_object<std::ifstream::char_type> controllerEntry;
         controllerEntry.set_name(appName.toStdString());
         controllerEntry.add_attribute("workshop", controllerConfigID.toStdString());
@@ -474,12 +490,53 @@ void SteamTools::updateControllerConfig(QString appName, QString controllerConfi
         std::unique_ptr<tyti::vdf::basic_object<std::ifstream::char_type>> uniqueObjectPtr(new tyti::vdf::basic_object<char>(controllerEntry));
 
         root.add_child(std::move(uniqueObjectPtr));
-        std::ofstream outFile(controllerFile.toStdString());
-        QString backupFile = QString("%1.bak").arg(controllerFile);
-        QFile::copy(controllerFile, backupFile);
-        tyti::vdf::write(outFile, root);
+        update_file = true;
     } else {
-        infoFunction(QString("Controller config already set for %1, not overwriting").arg(appName));
+        auto oldEntry = root.childs[appName.toStdString()];
+        // look for workshop entry
+        auto existingWorkshop = oldEntry->attribs.find("workshop");
+        if(existingWorkshop == oldEntry->attribs.end())
+        {
+            // add if doesn't exist
+            oldEntry->add_attribute("workshop", controllerConfigID.toStdString());
+            update_file = true;
+        }
+        // delete template setting if it exists so use workshop id
+        existingWorkshop = oldEntry->attribs.find("template");
+        if(existingWorkshop != oldEntry->attribs.end())
+        {
+            // delete if exists
+            oldEntry->attribs.erase(existingWorkshop);
+            update_file = true;
+        }
+        else
+        {
+            if(oldEntry->attribs["workshop"] == controllerConfigID.toStdString())
+                infoFunction(QString("Controller config already set for %1, not overwriting").arg(appName));
+            else
+            {
+                oldEntry->attribs["workshop"] = controllerConfigID.toStdString();
+                root.childs[appName.toStdString()] = oldEntry;
+                update_file = true;
+            }
+        }
+    }
+    if(update_file)
+    {
+        QString directoryPath = controllerFileInfo.absolutePath();
+        QString backupFile = directoryPath;
+        QString dateString = QDateTime::currentDateTime().toString("yyyy-MM-dd-HH:mm:ss");
+        backupFile.append(QString("/configset_controller_neptune.%2.bak").arg(dateString));
+        QFile oldBackup(backupFile);
+        if(oldBackup.exists())
+            oldBackup.remove();
+        bool success = QFile::copy(controllerFile, backupFile);
+        if(success)
+            infoFunction(QString("%1 backed up at %2").arg(controllerFile).arg(backupFile));
+        else
+            errorFunction(QString("Error backing up %1").arg(controllerFile));
+        std::ofstream outFile(controllerFile.toStdString());
+        tyti::vdf::write(outFile, root);
     }
 }
 
